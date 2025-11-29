@@ -6,6 +6,7 @@
 #pragma once
 
 #include <array>
+#include <concepts>
 #include <cstddef>
 #include <functional>
 #include <numeric>
@@ -21,16 +22,10 @@ template <typename T>
 concept tuple_like = requires(T a) { std::tuple_size<T>::value; };
 
 namespace detail {
-template <typename T>
-struct is_bool : public std::is_same<T, bool> {};
-
-template <typename T>
-bool constexpr is_bool_v = is_bool<T>::value;
-
 template <tuple_like T>
 bool consteval has_bool() {
   auto lambda = []<size_t... N>(std::index_sequence<N...>) {
-    return (is_bool_v<std::decay_t<typename std::tuple_element<N, T>::type>> || ...);
+    return (std::same_as<bool, std::decay_t<typename std::tuple_element<N, T>::type>> || ...);
   };
 
   return lambda(std::make_index_sequence<std::tuple_size_v<T>>());
